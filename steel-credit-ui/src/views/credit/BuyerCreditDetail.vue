@@ -227,11 +227,13 @@ function renderTrend() {
   display: flex;
   gap: 20px;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .overview-info h2 {
   font-size: 20px;
   margin-bottom: 8px;
+  word-break: break-all;
 }
 
 .overview-row {
@@ -241,6 +243,7 @@ function renderTrend() {
   font-size: 14px;
   color: var(--text-secondary);
   margin-bottom: 4px;
+  flex-wrap: wrap;
 }
 
 .overview-row strong {
@@ -252,6 +255,7 @@ function renderTrend() {
   display: flex;
   gap: 8px;
   margin-top: 12px;
+  flex-wrap: wrap;
 }
 
 .charts-row {
@@ -272,33 +276,75 @@ function renderTrend() {
 
 .feedback-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   padding: 10px 14px;
   background: #f8fafc;
   border-radius: 8px;
+  flex-wrap: wrap;
 }
 
 .feedback-icon {
   font-size: 18px;
+  flex-shrink: 0;
 }
 
 .feedback-comment {
   font-style: italic;
   color: var(--text-secondary);
+  word-break: break-all;
 }
 
 .feedback-source {
-  font-size: 12px;
+  font-size: 13px;
   color: #94a3b8;
 }
 
 .missing-hint {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   font-size: 14px;
   color: var(--text-secondary);
   margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-container {
+    height: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .overview-card .overview-top {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .overview-info h2 {
+    font-size: 17px;
+  }
+
+  .overview-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .overview-row strong {
+    font-size: 18px;
+  }
+
+  .chart-container {
+    height: 220px;
+  }
+
+  :deep(.el-table) {
+    font-size: 13px;
+  }
 }
 </style>

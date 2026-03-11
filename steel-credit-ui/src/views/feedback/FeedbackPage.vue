@@ -8,7 +8,7 @@
     <!-- 评价表单 -->
     <div class="section-card">
       <div class="section-title">提交评价</div>
-      <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
+      <el-form :model="form" :label-width="isMobile ? 'auto' : '120px'" :label-position="isMobile ? 'top' : 'right'" :rules="rules" ref="formRef">
         <el-form-item label="被评方企业ID" prop="targetEnterpriseId">
           <el-input-number v-model="form.targetEnterpriseId" :min="1" />
         </el-form-item>
@@ -169,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { submitFeedback, getFeedbackList } from '../../api/feedback'
@@ -212,6 +212,12 @@ const rules = {
 }
 
 const evaluatorId = computed(() => authStore.enterpriseId || enterpriseId.value)
+
+const windowWidth = ref(window.innerWidth)
+function onResize() { windowWidth.value = window.innerWidth }
+onMounted(() => window.addEventListener('resize', onResize))
+onBeforeUnmount(() => window.removeEventListener('resize', onResize))
+const isMobile = computed(() => windowWidth.value < 480)
 
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
@@ -285,6 +291,7 @@ onMounted(loadFeedbacks)
   align-items: center;
   gap: 16px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .fb-impression {
@@ -307,5 +314,33 @@ onMounted(loadFeedbacks)
   font-style: italic;
   color: var(--text-secondary);
   font-size: 14px;
+  word-break: break-all;
+}
+
+@media (max-width: 480px) {
+  .feedback-card {
+    padding: 12px;
+  }
+
+  .fb-header {
+    gap: 8px;
+  }
+
+  :deep(.el-radio-group) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .filter-row :deep(.el-radio-group) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .filter-row :deep(.el-radio-button__inner) {
+    border-radius: 4px !important;
+    border-left: 1px solid var(--el-border-color) !important;
+  }
 }
 </style>

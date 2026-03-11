@@ -11,14 +11,13 @@
       </el-empty>
     </div>
 
-    <div class="section-card" v-else>
+    <!-- Desktop: 表格视图 -->
+    <div class="section-card desktop-table" v-if="!loadError && !isMobile">
       <el-table :data="list" stripe style="width: 100%" v-loading="loading">
+        <template #empty><el-empty description="暂无数据" :image-size="60" /></template>
         <el-table-column label="企业名称" min-width="180">
           <template #default="{ row }">
-            <router-link
-              :to="{ name: 'EnterpriseCreditCard', params: { id: row.enterpriseId } }"
-              class="enterprise-link"
-            >
+            <router-link :to="{ name: 'EnterpriseCreditCard', params: { id: row.enterpriseId } }" class="enterprise-link">
               {{ row.enterpriseName || '企业 ' + row.enterpriseId }}
             </router-link>
           </template>
@@ -49,12 +48,7 @@
         </el-table-column>
         <el-table-column label="欠款标记" width="120">
           <template #default="{ row }">
-            <el-tag
-              v-if="row.overdueTag && row.overdueTag !== 'NORMAL'"
-              :type="row.hasSevereOverdue ? 'danger' : 'warning'"
-              size="small"
-              round
-            >
+            <el-tag v-if="row.overdueTag && row.overdueTag !== 'NORMAL'" :type="row.hasSevereOverdue ? 'danger' : 'warning'" size="small" round>
               {{ getOverdueLabel(row.overdueTag) }}
             </el-tag>
             <span v-else class="no-data">正常</span>
@@ -67,6 +61,37 @@
           </template>
         </el-table-column>
       </el-table>
+    </div>
+
+    <!-- Mobile: 卡片视图 -->
+    <div v-if="!loadError && isMobile" v-loading="loading">
+      <el-empty v-if="!list.length && !loading" description="暂无数据" :image-size="60" />
+      <div v-for="row in list" :key="row.enterpriseId" class="mobile-card section-card" @click="goCredit(row.enterpriseId)">
+        <div class="mc-name">{{ row.enterpriseName || '企业 ' + row.enterpriseId }}</div>
+        <div class="mc-badges">
+          <div v-if="row.buyerGrade" class="mc-badge-item">
+            <span class="mc-label">买家</span>
+            <span class="mini-grade" :class="`grade-${row.buyerGrade}`">{{ row.buyerGrade }}</span>
+            <SufficiencyBar v-if="row.buyerDataSufficiency" :level="row.buyerDataSufficiency" label="" />
+          </div>
+          <div v-if="row.sellerGrade" class="mc-badge-item">
+            <span class="mc-label">卖家</span>
+            <span class="mini-grade" :class="`grade-${row.sellerGrade}`">{{ row.sellerGrade }}</span>
+            <SufficiencyBar v-if="row.sellerDataSufficiency" :level="row.sellerDataSufficiency" label="" />
+          </div>
+        </div>
+        <div class="mc-tags">
+          <RiskTag v-if="row.riskLevel" :level="row.riskLevel" effect="plain" />
+          <el-tag v-if="row.overdueTag && row.overdueTag !== 'NORMAL'" :type="row.hasSevereOverdue ? 'danger' : 'warning'" size="small" round>
+            {{ getOverdueLabel(row.overdueTag) }}
+          </el-tag>
+          <el-tag v-else type="success" size="small" round>正常</el-tag>
+        </div>
+        <div class="mc-actions">
+          <el-button size="small" type="primary" link @click.stop="goCredit(row.enterpriseId)">信用详情</el-button>
+          <el-button size="small" type="warning" link @click.stop="goFeedback(row.enterpriseId)">评价</el-button>
+        </div>
+      </div>
     </div>
 
     <div class="section-card legend-card">
@@ -91,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { getCreditBadges } from '../../api/credit'
 import type { CreditBadgeVO } from '../../types/credit'
@@ -103,6 +128,12 @@ const router = useRouter()
 const list = ref<CreditBadgeVO[]>([])
 const loading = ref(false)
 const loadError = ref(false)
+
+const windowWidth = ref(window.innerWidth)
+function onResize() { windowWidth.value = window.innerWidth }
+onMounted(() => window.addEventListener('resize', onResize))
+onBeforeUnmount(() => window.removeEventListener('resize', onResize))
+const isMobile = computed(() => windowWidth.value < 768)
 
 async function loadList() {
   loading.value = true
@@ -176,7 +207,8 @@ function goFeedback(id: number) {
 
 .legend-row {
   display: flex;
-  gap: 32px;
+  flex-wrap: wrap;
+  gap: 16px 32px;
   margin-bottom: 8px;
 }
 
@@ -189,7 +221,69 @@ function goFeedback(id: number) {
 }
 
 .legend-note {
-  font-size: 12px;
+  font-size: 13px;
   color: #94a3b8;
+}
+
+/* === Mobile card layout === */
+.mobile-card {
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.mobile-card:active {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.mc-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--credit-primary);
+  margin-bottom: 10px;
+}
+
+.mc-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.mc-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mc-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.mc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.mc-actions {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 10px;
+}
+
+@media (max-width: 480px) {
+  .mini-grade {
+    height: 28px;
+    min-width: 32px;
+    font-size: 11px;
+  }
+
+  .legend-row {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
 </style>

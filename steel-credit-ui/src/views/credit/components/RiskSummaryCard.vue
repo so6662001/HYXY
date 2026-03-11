@@ -74,6 +74,7 @@ function goDetail() {
 
 .risk-counts {
   display: flex;
+  flex-wrap: wrap;
   gap: 32px;
   margin-bottom: 16px;
 }
@@ -103,5 +104,20 @@ function goDetail() {
 
 .risk-actions {
   margin-top: 16px;
+}
+
+@media (max-width: 480px) {
+  .risk-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .risk-counts {
+    gap: 16px;
+  }
+
+  .count-value {
+    font-size: 18px;
+  }
 }
 </style>

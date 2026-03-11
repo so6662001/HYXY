@@ -143,10 +143,12 @@ watch(() => route.params.id, loadData)
   display: flex;
   align-items: center;
   gap: 24px;
+  flex-wrap: wrap;
 }
 
 .risk-stats {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   font-size: 14px;
   color: var(--text-secondary);
@@ -168,22 +170,52 @@ watch(() => route.params.id, loadData)
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .event-title {
   font-weight: 500;
   flex: 1;
+  min-width: 0;
+  word-break: break-all;
 }
 
 .event-date {
   font-size: 13px;
   color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .event-meta {
   display: flex;
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 8px 20px;
   font-size: 13px;
   color: var(--text-secondary);
+}
+
+@media (max-width: 480px) {
+  .risk-overview-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .risk-stats {
+    gap: 12px;
+  }
+
+  .risk-event-item {
+    padding: 12px;
+  }
+
+  .event-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  :deep(.el-table) {
+    font-size: 13px;
+  }
 }
 </style>

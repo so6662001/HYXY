@@ -93,14 +93,26 @@ watch(() => route.params.id, loadData)
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .enterprise-name {
   font-size: 22px;
   font-weight: 700;
+  word-break: break-all;
 }
 
 .credit-tabs :deep(.el-tabs__header) {
   margin-bottom: 0;
+}
+
+@media (max-width: 480px) {
+  .enterprise-name {
+    font-size: 18px;
+  }
+
+  .enterprise-header {
+    gap: 8px;
+  }
 }
 </style>

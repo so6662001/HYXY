@@ -150,4 +150,22 @@ function goDetail() {
 .summary-actions {
   margin-top: 20px;
 }
+
+@media (max-width: 480px) {
+  .summary-top {
+    gap: 16px;
+  }
+
+  .grade-section {
+    gap: 12px;
+  }
+
+  .grade-score strong {
+    font-size: 20px;
+  }
+
+  .source-item {
+    font-size: 14px;
+  }
+}
 </style>
