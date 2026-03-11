@@ -5,12 +5,15 @@ import com.steel.credit.service.CreditRatingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Tag(name = "信用评级", description = "企业信用评级相关接口（与风险预警独立）")
+@Validated
 @RestController
 @RequestMapping("/credit")
 @RequiredArgsConstructor
@@ -42,7 +45,7 @@ public class CreditRatingController {
     @Operation(summary = "批量获取信用角标", description = "用于询报价列表中展示信用等级、风险状态等角标信息")
     @PostMapping("/badges")
     public Result<List<InquiryCreditBadgeVO>> getCreditBadges(
-            @RequestBody List<Long> enterpriseIds) {
+            @RequestBody @Size(max = 100, message = "单次查询不超过100家企业") List<Long> enterpriseIds) {
         return Result.ok(creditRatingService.getCreditBadges(enterpriseIds));
     }
 

@@ -6,7 +6,7 @@ const router = createRouter({
     {
       path: '/',
       component: () => import('../views/Layout.vue'),
-      redirect: '/enterprise/1001',
+      redirect: '/inquiry',
       children: [
         {
           path: '/enterprise/:id',

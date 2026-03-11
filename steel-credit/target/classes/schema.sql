@@ -200,7 +200,8 @@ CREATE TABLE IF NOT EXISTS `erp_order_record` (
     PRIMARY KEY (`id`),
     INDEX `idx_buyer` (`buyer_enterprise_id`, `order_date`),
     INDEX `idx_seller` (`seller_enterprise_id`, `order_date`),
-    INDEX `idx_erp_order_no` (`erp_order_no`)
+    INDEX `idx_erp_order_no` (`erp_order_no`),
+    UNIQUE INDEX `uk_order_seller` (`erp_order_no`, `seller_enterprise_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='ERP订单履约记录';
 
 -- ERP付款记录
@@ -224,7 +225,9 @@ CREATE TABLE IF NOT EXISTS `erp_payment_record` (
     `deleted` INT DEFAULT 0,
     PRIMARY KEY (`id`),
     INDEX `idx_buyer` (`buyer_enterprise_id`, `agreed_payment_date`),
-    INDEX `idx_seller` (`seller_enterprise_id`)
+    INDEX `idx_seller` (`seller_enterprise_id`),
+    INDEX `idx_buyer_seller_date` (`buyer_enterprise_id`, `seller_enterprise_id`, `agreed_payment_date`),
+    UNIQUE INDEX `uk_erp_order_seller` (`erp_order_no`, `seller_enterprise_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='ERP付款记录';
 
 -- ERP欠款汇总表
@@ -245,7 +248,8 @@ CREATE TABLE IF NOT EXISTS `erp_overdue_summary` (
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted` INT DEFAULT 0,
     PRIMARY KEY (`id`),
-    INDEX `idx_buyer_date` (`buyer_enterprise_id`, `snapshot_date`)
+    INDEX `idx_buyer_date` (`buyer_enterprise_id`, `snapshot_date`),
+    INDEX `idx_buyer_seller_date` (`buyer_enterprise_id`, `seller_enterprise_id`, `snapshot_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='ERP欠款汇总(每日快照)';
 
 -- 合作印象评价表
@@ -272,7 +276,7 @@ CREATE TABLE IF NOT EXISTS `cooperation_feedback` (
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted` INT DEFAULT 0,
     PRIMARY KEY (`id`),
-    INDEX `idx_target_role` (`target_enterprise_id`, `evaluator_role`),
+    INDEX `idx_target_role` (`target_enterprise_id`, `evaluator_role`, `valid`),
     INDEX `idx_evaluator_target` (`evaluator_enterprise_id`, `target_enterprise_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合作印象评价';
 

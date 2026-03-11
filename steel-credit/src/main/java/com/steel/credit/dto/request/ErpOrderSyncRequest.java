@@ -18,8 +18,10 @@ public class ErpOrderSyncRequest {
     private Long buyerEnterpriseId;
     @NotNull
     private Long sellerEnterpriseId;
+    @NotNull(message = "订单金额不能为空")
     private BigDecimal orderAmount;
     private BigDecimal orderQuantity;
+    @NotNull(message = "下单日期不能为空")
     private LocalDate orderDate;
     private String orderStatus;
     private Boolean cancelled;

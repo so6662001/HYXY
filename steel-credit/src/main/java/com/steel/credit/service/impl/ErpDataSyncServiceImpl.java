@@ -65,6 +65,12 @@ public class ErpDataSyncServiceImpl implements ErpDataSyncService {
                     record.setShipmentOverdue(record.getShipmentDate().isAfter(record.getAgreedShipmentDate()) ? 1 : 0);
                 }
 
+                int exists = erpOrderRecordMapper.countByOrderNoAndSeller(req.getErpOrderNo(), sellerEnterpriseId);
+                if (exists > 0) {
+                    log.debug("订单记录已存在，跳过: erpOrderNo={}", req.getErpOrderNo());
+                    successCount++;
+                    continue;
+                }
                 erpOrderRecordMapper.insert(record);
                 successCount++;
             } catch (Exception e) {
@@ -110,6 +116,12 @@ public class ErpDataSyncServiceImpl implements ErpDataSyncService {
                         && req.getPaidAmount().compareTo(req.getPayableAmount()) < 0;
                 record.setHasOutstanding(unpaid || partialPaid ? 1 : 0);
 
+                int exists = erpPaymentRecordMapper.countByOrderNoAndSeller(req.getErpOrderNo(), sellerEnterpriseId);
+                if (exists > 0) {
+                    log.debug("付款记录已存在，跳过: erpOrderNo={}", req.getErpOrderNo());
+                    successCount++;
+                    continue;
+                }
                 erpPaymentRecordMapper.insert(record);
                 successCount++;
             } catch (Exception e) {
@@ -123,7 +135,10 @@ public class ErpDataSyncServiceImpl implements ErpDataSyncService {
         requests.stream()
                 .map(ErpPaymentSyncRequest::getBuyerEnterpriseId)
                 .distinct()
-                .forEach(this::updateOverdueTags);
+                .forEach(buyerId -> {
+                    aggregateOverdueSummary(buyerId);
+                    updateOverdueTags(buyerId);
+                });
     }
 
     @Override
@@ -190,6 +205,10 @@ public class ErpDataSyncServiceImpl implements ErpDataSyncService {
     @Override
     public void aggregateOverdueSummary(Long buyerEnterpriseId) {
         String startDate = LocalDate.now().minusMonths(12).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String today = LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+        erpOverdueSummaryMapper.deleteByBuyerAndDate(buyerEnterpriseId, today);
+
         List<Long> sellerIds = erpPaymentRecordMapper.selectDistinctSellerIdsByBuyer(buyerEnterpriseId);
 
         for (Long sellerId : sellerIds) {

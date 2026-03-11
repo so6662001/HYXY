@@ -1,5 +1,6 @@
 <template>
   <div class="page-container" v-if="detail">
+    <el-page-header @back="router.back()" title="返回" style="margin-bottom: 16px;" />
     <!-- 评级概览 -->
     <div class="section-card overview-card">
       <div class="overview-top">
@@ -109,11 +110,17 @@
   <div v-else-if="loading" style="text-align: center; padding: 80px 0;">
     <el-icon class="is-loading" :size="32"><Loading /></el-icon>
   </div>
+  <div v-else-if="error" class="page-container">
+    <el-empty description="加载失败，请稍后重试">
+      <el-button type="primary" @click="loadData">重试</el-button>
+      <el-button @click="router.back()">返回</el-button>
+    </el-empty>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import { getBuyerCreditDetail } from '../../api/credit'
 import type { CreditDetailVO } from '../../types/credit'
@@ -122,34 +129,59 @@ import GradeBadge from '../../components/credit/GradeBadge.vue'
 import SufficiencyBar from '../../components/credit/SufficiencyBar.vue'
 
 const route = useRoute()
+const router = useRouter()
 const detail = ref<CreditDetailVO | null>(null)
 const loading = ref(false)
+const error = ref(false)
 const radarChartRef = ref<HTMLDivElement>()
 const trendChartRef = ref<HTMLDivElement>()
 
+let radarChart: echarts.ECharts | null = null
+let trendChart: echarts.ECharts | null = null
+
 async function loadData() {
   const id = Number(route.params.id)
-  if (!id) return
+  if (!id || isNaN(id)) return
   loading.value = true
+  error.value = false
   try {
     const res = await getBuyerCreditDetail(id)
     detail.value = res.data.data
     await nextTick()
     renderRadar()
     renderTrend()
+  } catch {
+    error.value = true
   } finally {
     loading.value = false
   }
 }
 
-onMounted(loadData)
+onMounted(() => {
+  loadData()
+  window.addEventListener('resize', handleResize)
+})
+
 watch(() => route.params.id, loadData)
+
+onBeforeUnmount(() => {
+  radarChart?.dispose()
+  trendChart?.dispose()
+  window.removeEventListener('resize', handleResize)
+})
+
+function handleResize() {
+  radarChart?.resize()
+  trendChart?.resize()
+}
 
 function renderRadar() {
   if (!radarChartRef.value || !detail.value) return
-  const chart = echarts.init(radarChartRef.value)
   const dims = detail.value.dimensions
-  chart.setOption({
+  if (!dims || dims.length === 0) return
+  radarChart?.dispose()
+  radarChart = echarts.init(radarChartRef.value)
+  radarChart.setOption({
     radar: {
       indicator: dims.map(d => ({ name: d.dimensionName, max: 100 })),
       shape: 'polygon',
@@ -170,9 +202,10 @@ function renderRadar() {
 
 function renderTrend() {
   if (!trendChartRef.value || !detail.value?.trend?.length) return
-  const chart = echarts.init(trendChartRef.value)
+  trendChart?.dispose()
+  trendChart = echarts.init(trendChartRef.value)
   const trend = [...detail.value.trend].reverse()
-  chart.setOption({
+  trendChart.setOption({
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', data: trend.map(t => t.period) },
     yAxis: { type: 'value', min: 0, max: 1000 },

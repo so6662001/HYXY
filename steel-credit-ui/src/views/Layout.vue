@@ -7,7 +7,7 @@
           <span class="logo-text">钢铁交易平台 · 企业信用系统</span>
         </div>
         <el-menu mode="horizontal" :default-active="activeMenu" router class="header-menu">
-          <el-menu-item index="/enterprise/1001">企业信用</el-menu-item>
+          <el-menu-item index="/inquiry">企业信用</el-menu-item>
           <el-menu-item index="/inquiry">询报价列表</el-menu-item>
         </el-menu>
       </div>

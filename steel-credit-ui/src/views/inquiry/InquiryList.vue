@@ -5,8 +5,14 @@
       <p class="subtitle">展示各企业信用角标：信用等级 + 数据充分度 + 风险状态</p>
     </div>
 
-    <div class="section-card">
-      <el-table :data="list" stripe style="width: 100%">
+    <div v-if="loadError" class="section-card">
+      <el-empty description="加载失败，请稍后重试">
+        <el-button type="primary" @click="loadList">重试</el-button>
+      </el-empty>
+    </div>
+
+    <div class="section-card" v-else>
+      <el-table :data="list" stripe style="width: 100%" v-loading="loading">
         <el-table-column label="企业名称" min-width="180">
           <template #default="{ row }">
             <router-link
@@ -95,22 +101,25 @@ import RiskTag from '../../components/credit/RiskTag.vue'
 
 const router = useRouter()
 const list = ref<CreditBadgeVO[]>([])
+const loading = ref(false)
+const loadError = ref(false)
 
-onMounted(async () => {
+async function loadList() {
+  loading.value = true
+  loadError.value = false
   try {
     const ids = [1001, 1002, 1003, 1004, 1005]
     const res = await getCreditBadges(ids)
     list.value = res.data.data || []
-  } catch (e) {
-    list.value = [
-      { enterpriseId: 1001, enterpriseName: '鼎盛钢铁', buyerGrade: 'AA', buyerDataSufficiency: 5, sellerGrade: 'A', sellerDataSufficiency: 3, riskLevel: 'NONE', overdueTag: 'NORMAL', hasSevereOverdue: false },
-      { enterpriseId: 1002, enterpriseName: '宏达贸易', buyerGrade: 'BBB', buyerDataSufficiency: 2, riskLevel: 'LOW', overdueTag: 'MILD', hasSevereOverdue: false },
-      { enterpriseId: 1003, enterpriseName: '新锐工贸', buyerGrade: 'B', buyerDataSufficiency: 1, riskLevel: 'MEDIUM', overdueTag: 'SEVERE', hasSevereOverdue: true },
-      { enterpriseId: 1004, enterpriseName: '长江钢材', sellerGrade: 'AAA', sellerDataSufficiency: 5, riskLevel: 'NONE' },
-      { enterpriseId: 1005, enterpriseName: '明辉实业', buyerGrade: 'A', buyerDataSufficiency: 3, sellerGrade: 'AA', sellerDataSufficiency: 4, riskLevel: 'NONE', overdueTag: 'NORMAL', hasSevereOverdue: false }
-    ]
+  } catch {
+    loadError.value = true
+    list.value = []
+  } finally {
+    loading.value = false
   }
-})
+}
+
+onMounted(loadList)
 
 function goCredit(id: number) {
   router.push({ name: 'EnterpriseCreditCard', params: { id } })

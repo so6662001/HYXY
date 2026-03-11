@@ -1,8 +1,6 @@
 package com.steel.credit.dto.request;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 /**
@@ -45,7 +43,9 @@ public class FeedbackSubmitRequest {
     @Min(1) @Max(3)
     private Integer willContinue;
 
+    @Size(max = 500, message = "评价内容不超过500字")
     private String comment;
 
+    @Pattern(regexp = "RE_INQUIRY|VIEW_CREDIT|PERIODIC|INVITATION", message = "触发场景值不合法")
     private String triggerScene;
 }

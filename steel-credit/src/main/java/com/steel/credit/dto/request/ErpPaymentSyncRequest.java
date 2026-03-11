@@ -18,10 +18,13 @@ public class ErpPaymentSyncRequest {
     private Long buyerEnterpriseId;
     @NotNull
     private Long sellerEnterpriseId;
+    @NotNull(message = "应付金额不能为空")
     private BigDecimal payableAmount;
     private BigDecimal paidAmount;
+    @NotNull(message = "约定付款日期不能为空")
     private LocalDate agreedPaymentDate;
     private LocalDate actualPaymentDate;
     private Integer agreedPaymentDays;
+    @NotNull(message = "付款状态不能为空")
     private String paymentStatus;
 }

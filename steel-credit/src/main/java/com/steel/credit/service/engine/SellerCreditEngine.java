@@ -339,8 +339,15 @@ public class SellerCreditEngine {
                 enterpriseId, "BUYER_RATE_SELLER");
         if (feedbacks.size() < MIN_FEEDBACK_COUNT) return 0;
 
-        double avgImpression = feedbacks.stream()
-                .mapToInt(CooperationFeedback::getOverallImpression).average().orElse(2.5);
+        double weightedSum = feedbacks.stream()
+                .filter(f -> f.getOverallImpression() != null)
+                .mapToDouble(f -> f.getOverallImpression() * (f.getCredibilityWeight() != null ? f.getCredibilityWeight() : 0.5))
+                .sum();
+        double totalWeight = feedbacks.stream()
+                .filter(f -> f.getOverallImpression() != null)
+                .mapToDouble(f -> f.getCredibilityWeight() != null ? f.getCredibilityWeight() : 0.5)
+                .sum();
+        double avgImpression = totalWeight > 0 ? weightedSum / totalWeight : 2.5;
         int impressionScore = (int) (avgImpression / 4.0 * 60);
 
         double avgDetail = feedbacks.stream()
@@ -384,8 +391,7 @@ public class SellerCreditEngine {
 
     private int countDistinctBuyers(Long enterpriseId) {
         String startDate = LocalDate.now().minusMonths(12).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        List<ErpOrderRecord> orders = erpOrderRecordMapper.selectBySellerAndDateRange(enterpriseId, startDate);
-        return (int) orders.stream().map(ErpOrderRecord::getBuyerEnterpriseId).distinct().count();
+        return erpOrderRecordMapper.countDistinctBuyersBySeller(enterpriseId, startDate);
     }
 
 }

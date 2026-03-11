@@ -20,4 +20,10 @@ public interface ErpOrderRecordMapper extends BaseMapper<ErpOrderRecord> {
 
     @Select("SELECT COUNT(*) FROM erp_order_record WHERE buyer_enterprise_id = #{buyerId} AND deleted = 0")
     int countByBuyer(@Param("buyerId") Long buyerId);
+
+    @Select("SELECT COUNT(*) FROM erp_order_record WHERE erp_order_no = #{erpOrderNo} AND seller_enterprise_id = #{sellerId} AND deleted = 0")
+    int countByOrderNoAndSeller(@Param("erpOrderNo") String erpOrderNo, @Param("sellerId") Long sellerId);
+
+    @Select("SELECT COUNT(DISTINCT buyer_enterprise_id) FROM erp_order_record WHERE seller_enterprise_id = #{sellerId} AND order_date >= #{startDate} AND deleted = 0")
+    int countDistinctBuyersBySeller(@Param("sellerId") Long sellerId, @Param("startDate") String startDate);
 }

@@ -66,6 +66,7 @@
 /workspace/steel-credit/src/main/java/com/steel/credit/service/RiskWarningService.java
 /workspace/steel-credit/src/main/java/com/steel/credit/task/CreditScoringTask.java
 /workspace/steel-credit/src/main/java/com/steel/credit/mapper/ErpOverdueSummaryMapper.java
+/workspace/steel-credit/src/main/java/com/steel/credit/dto/response/CooperationFeedbackVO.java
 /workspace/steel-credit/src/main/java/com/steel/credit/dto/response/InquiryCreditBadgeVO.java
 /workspace/steel-credit/src/main/java/com/steel/credit/mapper/InquiryQuoteStatMapper.java
 /workspace/steel-credit/src/main/java/com/steel/credit/entity/ErpSyncLog.java

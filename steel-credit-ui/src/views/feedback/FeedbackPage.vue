@@ -170,18 +170,26 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { submitFeedback, getFeedbackList } from '../../api/feedback'
 import type { CooperationFeedback, FeedbackSubmitRequest } from '../../types/credit'
 import { getImpressionIcon, getImpressionText } from '../../utils/credit-helpers'
+import { useAuthStore } from '../../stores/auth'
 
 const route = useRoute()
-const enterpriseId = computed(() => Number(route.params.id))
+const router = useRouter()
+const authStore = useAuthStore()
+const enterpriseId = computed(() => {
+  const id = Number(route.params.id)
+  return isNaN(id) ? 0 : id
+})
 const evaluatorRole = ref('SELLER_RATE_BUYER')
 const listRole = ref('SELLER_RATE_BUYER')
 const feedbacks = ref<CooperationFeedback[]>([])
 const submitting = ref(false)
+const submitted = ref(false)
+const feedbacksLoading = ref(false)
 const formRef = ref<FormInstance>()
 
 const form = reactive<FeedbackSubmitRequest>({
@@ -193,6 +201,7 @@ const form = reactive<FeedbackSubmitRequest>({
 
 watch(enterpriseId, (newId) => {
   form.targetEnterpriseId = newId
+  submitted.value = false
   loadFeedbacks()
 })
 
@@ -202,27 +211,34 @@ const rules = {
   overallImpression: [{ required: true, message: '请选择整体印象' }]
 }
 
+const evaluatorId = computed(() => authStore.enterpriseId || enterpriseId.value)
+
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
   submitting.value = true
   try {
-    await submitFeedback(enterpriseId.value, form)
+    await submitFeedback(evaluatorId.value, form)
     ElMessage.success('评价提交成功')
+    submitted.value = true
+    formRef.value?.resetFields()
     loadFeedbacks()
-  } catch (e) {
-    console.error(e)
+  } catch {
+    // error already shown by interceptor
   } finally {
     submitting.value = false
   }
 }
 
 async function loadFeedbacks() {
+  feedbacksLoading.value = true
   try {
     const res = await getFeedbackList(enterpriseId.value, listRole.value)
     feedbacks.value = res.data.data || []
-  } catch (e) {
-    console.error(e)
+  } catch {
+    feedbacks.value = []
+  } finally {
+    feedbacksLoading.value = false
   }
 }
 

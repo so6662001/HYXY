@@ -1,5 +1,6 @@
 <template>
   <div class="page-container" v-if="detail">
+    <el-page-header @back="router.back()" title="返回" style="margin-bottom: 16px;" />
     <div class="section-card">
       <h2>{{ detail.enterpriseName }} · 风险预警详情</h2>
       <div class="disclaimer-text" style="margin-top: 8px;">
@@ -97,26 +98,37 @@
   <div v-else-if="loading" style="text-align: center; padding: 80px 0;">
     <el-icon class="is-loading" :size="32"><Loading /></el-icon>
   </div>
+  <div v-else-if="error" class="page-container">
+    <el-empty description="加载失败，请稍后重试">
+      <el-button type="primary" @click="loadData">重试</el-button>
+      <el-button @click="router.back()">返回</el-button>
+    </el-empty>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getRiskDetail } from '../../api/risk'
 import type { RiskDetailVO } from '../../types/credit'
 import RiskTag from '../../components/credit/RiskTag.vue'
 
 const route = useRoute()
+const router = useRouter()
 const detail = ref<RiskDetailVO | null>(null)
 const loading = ref(false)
+const error = ref(false)
 
 async function loadData() {
   const id = Number(route.params.id)
-  if (!id) return
+  if (!id || isNaN(id)) return
   loading.value = true
+  error.value = false
   try {
     const res = await getRiskDetail(id)
     detail.value = res.data.data
+  } catch {
+    error.value = true
   } finally {
     loading.value = false
   }

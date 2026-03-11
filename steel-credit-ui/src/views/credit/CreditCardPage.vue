@@ -39,7 +39,7 @@
       </el-tab-pane>
 
       <!-- 风险预警 Tab -->
-      <el-tab-pane label="风险预警" name="risk">
+      <el-tab-pane v-if="card.riskSummary" label="风险预警" name="risk">
         <RiskSummaryCard
           :risk="card.riskSummary"
           :enterprise-id="Number(route.params.id)"
@@ -77,8 +77,8 @@ async function loadData() {
     if (card.value?.buyerCredit) activeTab.value = 'buyer'
     else if (card.value?.sellerCredit) activeTab.value = 'seller'
     else activeTab.value = 'risk'
-  } catch (e) {
-    console.error(e)
+  } catch {
+    // error displayed by response interceptor
   } finally {
     loading.value = false
   }

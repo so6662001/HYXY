@@ -2,6 +2,7 @@ com/steel/credit/mapper/CreditScoreDetailMapper.class
 com/steel/credit/mapper/InquiryQuoteStatMapper.class
 com/steel/credit/dto/request/ErpOrderSyncRequest.class
 com/steel/credit/mapper/ErpSyncLogMapper.class
+com/steel/credit/dto/response/CooperationFeedbackVO.class
 com/steel/credit/service/CooperationFeedbackService.class
 com/steel/credit/mapper/RiskSnapshotMapper.class
 com/steel/credit/service/impl/RiskWarningServiceImpl.class

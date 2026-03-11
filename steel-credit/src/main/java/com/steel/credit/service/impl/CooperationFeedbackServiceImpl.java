@@ -1,6 +1,7 @@
 package com.steel.credit.service.impl;
 
 import com.steel.credit.dto.request.FeedbackSubmitRequest;
+import com.steel.credit.dto.response.CooperationFeedbackVO;
 import com.steel.credit.entity.CooperationFeedback;
 import com.steel.credit.entity.EnterpriseInfo;
 import com.steel.credit.entity.EnterpriseRelation;
@@ -11,6 +12,7 @@ import com.steel.credit.service.CooperationFeedbackService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,7 +26,12 @@ public class CooperationFeedbackServiceImpl implements CooperationFeedbackServic
     private final EnterpriseInfoMapper enterpriseInfoMapper;
 
     @Override
+    @Transactional
     public void submitFeedback(Long evaluatorEnterpriseId, FeedbackSubmitRequest request) {
+        if (evaluatorEnterpriseId.equals(request.getTargetEnterpriseId())) {
+            throw new IllegalArgumentException("不能对自己进行评价");
+        }
+
         if (!canEvaluate(evaluatorEnterpriseId, request.getTargetEnterpriseId())) {
             throw new IllegalArgumentException("您与该企业无询报价往来记录，无法进行评价");
         }
@@ -57,7 +64,12 @@ public class CooperationFeedbackServiceImpl implements CooperationFeedbackServic
         feedback.setPricingRating(request.getPricingRating());
         feedback.setCommunicationRating(request.getCommunicationRating());
         feedback.setWillContinue(request.getWillContinue());
-        feedback.setComment(request.getComment());
+        String comment = request.getComment();
+        if (comment != null) {
+            comment = comment.replaceAll("<[^>]*>", "").trim();
+            if (comment.length() > 500) comment = comment.substring(0, 500);
+        }
+        feedback.setComment(comment);
         feedback.setTriggerScene(request.getTriggerScene());
         feedback.setValid(1);
 
@@ -70,15 +82,38 @@ public class CooperationFeedbackServiceImpl implements CooperationFeedbackServic
     }
 
     @Override
-    public List<CooperationFeedback> getFeedbacksByTarget(Long targetEnterpriseId, String evaluatorRole) {
-        return cooperationFeedbackMapper.selectValidByTargetAndRole(targetEnterpriseId, evaluatorRole);
+    public List<CooperationFeedbackVO> getFeedbacksByTarget(Long targetEnterpriseId, String evaluatorRole) {
+        List<CooperationFeedback> feedbacks = cooperationFeedbackMapper.selectValidByTargetAndRole(targetEnterpriseId, evaluatorRole);
+        return feedbacks.stream().map(this::toVO).collect(java.util.stream.Collectors.toList());
+    }
+
+    private CooperationFeedbackVO toVO(CooperationFeedback fb) {
+        CooperationFeedbackVO vo = new CooperationFeedbackVO();
+        vo.setEvaluatorRole(fb.getEvaluatorRole());
+        vo.setCooperationLevel(fb.getCooperationLevel());
+        vo.setOverallImpression(fb.getOverallImpression());
+        vo.setPaymentRating(fb.getPaymentRating());
+        vo.setPickupRating(fb.getPickupRating());
+        vo.setOrderStabilityRating(fb.getOrderStabilityRating());
+        vo.setDeliveryRating(fb.getDeliveryRating());
+        vo.setQualityRating(fb.getQualityRating());
+        vo.setPricingRating(fb.getPricingRating());
+        vo.setCommunicationRating(fb.getCommunicationRating());
+        vo.setWillContinue(fb.getWillContinue());
+        vo.setComment(fb.getComment());
+        vo.setCreateTime(fb.getCreateTime() != null ? fb.getCreateTime().toString() : null);
+        return vo;
     }
 
     @Override
     public boolean canEvaluate(Long evaluatorId, Long targetId) {
+        if (evaluatorId.equals(targetId)) return false;
         List<EnterpriseRelation> relations = enterpriseRelationMapper.selectByEnterpriseId(evaluatorId);
         return relations.stream().anyMatch(r ->
-                (r.getEnterpriseAId().equals(targetId) || r.getEnterpriseBId().equals(targetId)));
+                (r.getEnterpriseAId().equals(targetId) || r.getEnterpriseBId().equals(targetId))
+                && Integer.valueOf(1).equals(r.getActiveStatus())
+                && r.getTotalInteractionCount() != null
+                && r.getTotalInteractionCount() >= 1);
     }
 
     /**

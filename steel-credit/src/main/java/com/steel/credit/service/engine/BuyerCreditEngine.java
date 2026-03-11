@@ -443,10 +443,16 @@ public class BuyerCreditEngine {
 
         if (feedbacks.size() < MIN_FEEDBACK_COUNT) return 0;
 
-        // 合作印象均分 (满分80)
-        double avgImpression = feedbacks.stream()
-                .mapToInt(CooperationFeedback::getOverallImpression)
-                .average().orElse(2.5);
+        // 合作印象加权均分 (满分80) — 使用credibilityWeight加权
+        double weightedImpressionSum = feedbacks.stream()
+                .filter(f -> f.getOverallImpression() != null)
+                .mapToDouble(f -> f.getOverallImpression() * (f.getCredibilityWeight() != null ? f.getCredibilityWeight() : 0.5))
+                .sum();
+        double totalImpressionWeight = feedbacks.stream()
+                .filter(f -> f.getOverallImpression() != null)
+                .mapToDouble(f -> f.getCredibilityWeight() != null ? f.getCredibilityWeight() : 0.5)
+                .sum();
+        double avgImpression = totalImpressionWeight > 0 ? weightedImpressionSum / totalImpressionWeight : 2.5;
         int impressionScore = (int) (avgImpression / 4.0 * 80);
 
         // 分项评价均分 (满分60)

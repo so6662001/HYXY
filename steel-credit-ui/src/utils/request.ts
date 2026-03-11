@@ -7,6 +7,14 @@ const service = axios.create({
   timeout: 15000
 })
 
+service.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token')
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 service.interceptors.response.use(
   (response) => {
     const res = response.data as Result<unknown>
@@ -17,7 +25,8 @@ service.interceptors.response.use(
     return response
   },
   (error) => {
-    ElMessage.error(error.message || '网络异常')
+    const msg = error.response?.data?.message || error.message || '网络异常'
+    ElMessage.error(msg)
     return Promise.reject(error)
   }
 )
