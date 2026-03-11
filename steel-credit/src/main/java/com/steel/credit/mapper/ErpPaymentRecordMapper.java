@@ -14,4 +14,13 @@ public interface ErpPaymentRecordMapper extends BaseMapper<ErpPaymentRecord> {
 
     @Select("SELECT COUNT(DISTINCT seller_enterprise_id) FROM erp_payment_record WHERE buyer_enterprise_id = #{buyerId} AND deleted = 0")
     int countDistinctSellersByBuyer(@Param("buyerId") Long buyerId);
+
+    @Select("SELECT DISTINCT buyer_enterprise_id FROM erp_payment_record WHERE deleted = 0")
+    List<Long> selectDistinctBuyerIds();
+
+    @Select("SELECT DISTINCT seller_enterprise_id FROM erp_payment_record WHERE buyer_enterprise_id = #{buyerId} AND deleted = 0")
+    List<Long> selectDistinctSellerIdsByBuyer(@Param("buyerId") Long buyerId);
+
+    @Select("SELECT * FROM erp_payment_record WHERE buyer_enterprise_id = #{buyerId} AND seller_enterprise_id = #{sellerId} AND agreed_payment_date >= #{startDate} AND deleted = 0")
+    List<ErpPaymentRecord> selectByBuyerSellerAndDate(@Param("buyerId") Long buyerId, @Param("sellerId") Long sellerId, @Param("startDate") String startDate);
 }

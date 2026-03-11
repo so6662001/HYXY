@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import * as echarts from 'echarts'
 import { getSellerCreditDetail } from '../../api/credit'
@@ -118,8 +118,9 @@ const loading = ref(false)
 const radarChartRef = ref<HTMLDivElement>()
 const trendChartRef = ref<HTMLDivElement>()
 
-onMounted(async () => {
+async function loadData() {
   const id = Number(route.params.id)
+  if (!id) return
   loading.value = true
   try {
     const res = await getSellerCreditDetail(id)
@@ -130,7 +131,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadData)
+watch(() => route.params.id, loadData)
 
 function renderRadar() {
   if (!radarChartRef.value || !detail.value) return

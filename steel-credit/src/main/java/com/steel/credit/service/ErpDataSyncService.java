@@ -21,4 +21,14 @@ public interface ErpDataSyncService {
      * 更新买家欠款标记
      */
     void updateOverdueTags(Long buyerEnterpriseId);
+
+    /**
+     * 聚合生成erp_overdue_summary快照（从erp_payment_record汇总）
+     */
+    void aggregateOverdueSummary(Long buyerEnterpriseId);
+
+    /**
+     * 批量聚合所有买家的欠款汇总快照
+     */
+    void batchAggregateOverdueSummaries();
 }

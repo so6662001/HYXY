@@ -54,7 +54,7 @@ public class ErpDataSyncServiceImpl implements ErpDataSyncService {
                 record.setActualPickupQuantity(req.getActualPickupQuantity());
                 record.setAgreedShipmentDate(req.getAgreedShipmentDate());
                 record.setShipmentDate(req.getShipmentDate());
-                record.setQualityPassed(Boolean.TRUE.equals(req.getQualityPassed()) ? 1 : 0);
+                record.setQualityPassed(req.getQualityPassed() == null || Boolean.TRUE.equals(req.getQualityPassed()) ? 1 : 0);
                 record.setReturned(Boolean.TRUE.equals(req.getReturned()) ? 1 : 0);
                 record.setSyncBatchNo(batchNo);
 
@@ -184,6 +184,80 @@ public class ErpDataSyncServiceImpl implements ErpDataSyncService {
             tag.setOverdueCount(totalOverdueCount);
             tag.setMaxOverdueDays(maxDays);
             buyerOverdueTagMapper.insert(tag);
+        }
+    }
+
+    @Override
+    public void aggregateOverdueSummary(Long buyerEnterpriseId) {
+        String startDate = LocalDate.now().minusMonths(12).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        List<Long> sellerIds = erpPaymentRecordMapper.selectDistinctSellerIdsByBuyer(buyerEnterpriseId);
+
+        for (Long sellerId : sellerIds) {
+            List<ErpPaymentRecord> payments = erpPaymentRecordMapper.selectByBuyerSellerAndDate(
+                    buyerEnterpriseId, sellerId, startDate);
+            if (payments.isEmpty()) continue;
+
+            BigDecimal totalPayable = payments.stream()
+                    .map(p -> p.getPayableAmount() != null ? p.getPayableAmount() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalPaid = payments.stream()
+                    .map(p -> p.getPaidAmount() != null ? p.getPaidAmount() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal outstanding = totalPayable.subtract(totalPaid).max(BigDecimal.ZERO);
+
+            BigDecimal overdueAmount = payments.stream()
+                    .filter(p -> p.getOverdueDays() != null && p.getOverdueDays() > 0)
+                    .filter(p -> Integer.valueOf(1).equals(p.getHasOutstanding()))
+                    .map(p -> {
+                        BigDecimal payable = p.getPayableAmount() != null ? p.getPayableAmount() : BigDecimal.ZERO;
+                        BigDecimal paid = p.getPaidAmount() != null ? p.getPaidAmount() : BigDecimal.ZERO;
+                        return payable.subtract(paid).max(BigDecimal.ZERO);
+                    })
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            int overdueCount = (int) payments.stream()
+                    .filter(p -> p.getOverdueDays() != null && p.getOverdueDays() > 0).count();
+            int severeCount = (int) payments.stream()
+                    .filter(p -> Integer.valueOf(1).equals(p.getSeverelyOverdue())).count();
+            int maxDays = payments.stream()
+                    .mapToInt(p -> p.getOverdueDays() != null ? p.getOverdueDays() : 0).max().orElse(0);
+
+            ErpOverdueSummary summary = new ErpOverdueSummary();
+            summary.setBuyerEnterpriseId(buyerEnterpriseId);
+            summary.setSellerEnterpriseId(sellerId);
+            summary.setSnapshotDate(LocalDate.now());
+            summary.setTotalPayable(totalPayable);
+            summary.setTotalPaid(totalPaid);
+            summary.setOutstandingBalance(outstanding);
+            summary.setOverdueAmount(overdueAmount);
+            summary.setMaxOverdueDays(maxDays);
+            summary.setOverdueCount(overdueCount);
+            summary.setSevereOverdueCount(severeCount);
+
+            String level;
+            if (maxDays > 120) level = "MALICIOUS";
+            else if (maxDays > 60) level = "SEVERE";
+            else if (overdueCount >= 3 || maxDays > 15) level = "MODERATE";
+            else if (overdueCount > 0) level = "MILD";
+            else level = "NORMAL";
+            summary.setOverdueLevel(level);
+
+            erpOverdueSummaryMapper.insert(summary);
+        }
+
+        updateOverdueTags(buyerEnterpriseId);
+    }
+
+    @Override
+    public void batchAggregateOverdueSummaries() {
+        List<Long> buyerIds = erpPaymentRecordMapper.selectDistinctBuyerIds();
+        log.info("批量聚合欠款汇总, 买家数={}", buyerIds.size());
+        for (Long buyerId : buyerIds) {
+            try {
+                aggregateOverdueSummary(buyerId);
+            } catch (Exception e) {
+                log.error("聚合买家 {} 欠款汇总失败", buyerId, e);
+            }
         }
     }
 

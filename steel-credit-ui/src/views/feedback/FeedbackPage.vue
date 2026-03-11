@@ -169,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { submitFeedback, getFeedbackList } from '../../api/feedback'
@@ -177,7 +177,7 @@ import type { CooperationFeedback, FeedbackSubmitRequest } from '../../types/cre
 import { getImpressionIcon, getImpressionText } from '../../utils/credit-helpers'
 
 const route = useRoute()
-const enterpriseId = Number(route.params.id)
+const enterpriseId = computed(() => Number(route.params.id))
 const evaluatorRole = ref('SELLER_RATE_BUYER')
 const listRole = ref('SELLER_RATE_BUYER')
 const feedbacks = ref<CooperationFeedback[]>([])
@@ -185,10 +185,15 @@ const submitting = ref(false)
 const formRef = ref<FormInstance>()
 
 const form = reactive<FeedbackSubmitRequest>({
-  targetEnterpriseId: enterpriseId,
+  targetEnterpriseId: enterpriseId.value,
   cooperationLevel: 2,
   overallImpression: 3,
   triggerScene: 'VIEW_CREDIT'
+})
+
+watch(enterpriseId, (newId) => {
+  form.targetEnterpriseId = newId
+  loadFeedbacks()
 })
 
 const rules = {
@@ -202,7 +207,7 @@ async function handleSubmit() {
   if (!valid) return
   submitting.value = true
   try {
-    await submitFeedback(1001, form)
+    await submitFeedback(enterpriseId.value, form)
     ElMessage.success('评价提交成功')
     loadFeedbacks()
   } catch (e) {
@@ -214,7 +219,7 @@ async function handleSubmit() {
 
 async function loadFeedbacks() {
   try {
-    const res = await getFeedbackList(enterpriseId, listRole.value)
+    const res = await getFeedbackList(enterpriseId.value, listRole.value)
     feedbacks.value = res.data.data || []
   } catch (e) {
     console.error(e)

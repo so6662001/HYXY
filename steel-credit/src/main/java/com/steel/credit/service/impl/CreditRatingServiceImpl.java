@@ -384,8 +384,16 @@ public class CreditRatingServiceImpl implements CreditRatingService {
     }
 
     private List<CreditDetailVO.GradeChange> buildGradeHistory(Long enterpriseId, String roleType) {
-        // 简化: 直接从历史表查询
-        return Collections.emptyList();
+        List<CreditScoreHistory> records = creditScoreHistoryMapper.selectByEnterpriseAndRole(enterpriseId, roleType, 10);
+        return records.stream().map(h -> {
+            CreditDetailVO.GradeChange change = new CreditDetailVO.GradeChange();
+            change.setPeriod(h.getRatingPeriod());
+            change.setFromGrade(h.getPreviousGrade());
+            change.setToGrade(h.getCurrentGrade());
+            change.setFromScore(h.getPreviousScore());
+            change.setToScore(h.getCurrentScore());
+            return change;
+        }).collect(Collectors.toList());
     }
 
     private List<CreditDetailVO.FeedbackSummary> buildFeedbackSummaries(Long enterpriseId, String role) {

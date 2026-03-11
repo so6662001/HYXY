@@ -1,6 +1,7 @@
 package com.steel.credit.task;
 
 import com.steel.credit.service.CreditRatingService;
+import com.steel.credit.service.ErpDataSyncService;
 import com.steel.credit.service.RiskWarningService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,25 @@ public class CreditScoringTask {
 
     private final CreditRatingService creditRatingService;
     private final RiskWarningService riskWarningService;
+    private final ErpDataSyncService erpDataSyncService;
+
+    /**
+     * 每日凌晨1:30 聚合ERP欠款汇总快照（需在信用评分之前执行）
+     */
+    @Scheduled(cron = "0 30 1 * * ?")
+    public void dailyOverdueAggregation() {
+        log.info("========== 定时任务: 开始聚合欠款汇总快照 ==========");
+        long start = System.currentTimeMillis();
+
+        try {
+            erpDataSyncService.batchAggregateOverdueSummaries();
+        } catch (Exception e) {
+            log.error("欠款汇总聚合异常", e);
+        }
+
+        long elapsed = System.currentTimeMillis() - start;
+        log.info("========== 定时任务: 欠款汇总聚合完成, 耗时{}ms ==========", elapsed);
+    }
 
     /**
      * 每日凌晨2:00 批量计算所有企业的信用评分

@@ -112,12 +112,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import * as echarts from 'echarts'
 import { getBuyerCreditDetail } from '../../api/credit'
 import type { CreditDetailVO } from '../../types/credit'
-import { getProgressColor, getImpressionIcon, getGradeColor } from '../../utils/credit-helpers'
+import { getProgressColor, getImpressionIcon } from '../../utils/credit-helpers'
 import GradeBadge from '../../components/credit/GradeBadge.vue'
 import SufficiencyBar from '../../components/credit/SufficiencyBar.vue'
 
@@ -127,8 +127,9 @@ const loading = ref(false)
 const radarChartRef = ref<HTMLDivElement>()
 const trendChartRef = ref<HTMLDivElement>()
 
-onMounted(async () => {
+async function loadData() {
   const id = Number(route.params.id)
+  if (!id) return
   loading.value = true
   try {
     const res = await getBuyerCreditDetail(id)
@@ -139,7 +140,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadData)
+watch(() => route.params.id, loadData)
 
 function renderRadar() {
   if (!radarChartRef.value || !detail.value) return

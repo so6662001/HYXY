@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getRiskDetail } from '../../api/risk'
 import type { RiskDetailVO } from '../../types/credit'
@@ -110,8 +110,9 @@ const route = useRoute()
 const detail = ref<RiskDetailVO | null>(null)
 const loading = ref(false)
 
-onMounted(async () => {
+async function loadData() {
   const id = Number(route.params.id)
+  if (!id) return
   loading.value = true
   try {
     const res = await getRiskDetail(id)
@@ -119,7 +120,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadData)
+watch(() => route.params.id, loadData)
 </script>
 
 <style scoped>
