@@ -1,0 +1,62 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: steel-credit
+  datasource:
+    url: jdbc:mysql://localhost:3306/steel_credit?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.steel.credit.entity
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# Knife4j
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+# 信用评级系统配置
+credit:
+  scoring:
+    cron: "0 0 2 * * ?"
+    time-decay:
+      recent-6m-weight: 0.6
+      past-6-12m-weight: 0.3
+      older-weight: 0.1
+    buyer-grade-ceiling:
+      FULL: AAA
+      PLATFORM_FEEDBACK: AA
+      BASIC: A
+    seller-grade-ceiling:
+      FULL: AAA
+      PLATFORM_FEEDBACK: AA
+      BASIC: A
+    min-feedback-count: 5
+    min-erp-record-count: 3
+    severe-overdue-days: 60
+
+logging:
+  level:
+    com.steel.credit: DEBUG
