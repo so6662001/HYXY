@@ -1,0 +1,113 @@
+:root {
+  --credit-primary: #2563eb;
+  --credit-green: #16a34a;
+  --credit-light-green: #86efac;
+  --risk-orange: #ea580c;
+  --risk-red: #dc2626;
+  --risk-yellow: #eab308;
+  --overdue-red: #dc2626;
+  --bg-card: #ffffff;
+  --bg-page: #f5f7fa;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.section-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.grade-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.grade-AAA { background: linear-gradient(135deg, #059669, #10b981); }
+.grade-AA { background: linear-gradient(135deg, #16a34a, #4ade80); }
+.grade-A { background: linear-gradient(135deg, #22c55e, #86efac); }
+.grade-BBB { background: linear-gradient(135deg, #2563eb, #60a5fa); }
+.grade-BB { background: linear-gradient(135deg, #eab308, #fde047); color: #1e293b; }
+.grade-B { background: linear-gradient(135deg, #ea580c, #fb923c); }
+.grade-C { background: linear-gradient(135deg, #dc2626, #f87171); }
+.grade-D { background: linear-gradient(135deg, #991b1b, #dc2626); }
+
+.sufficiency-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.sufficiency-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: #e2e8f0;
+}
+
+.sufficiency-dot.filled {
+  background: #2563eb;
+}
+
+.risk-tag-HIGH { color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; }
+.risk-tag-MEDIUM { color: #ea580c; background: #fff7ed; border: 1px solid #fed7aa; }
+.risk-tag-LOW { color: #eab308; background: #fefce8; border: 1px solid #fef08a; }
+.risk-tag-NONE { color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; }
+
+.progress-bar {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.disclaimer-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border-left: 3px solid #cbd5e1;
+  margin-top: 12px;
+}
